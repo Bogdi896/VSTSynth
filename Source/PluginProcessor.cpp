@@ -97,10 +97,19 @@ void VSTSynth3AudioProcessor::changeProgramName (int index, const juce::String& 
 }
 
 //==============================================================================
-void VSTSynth3AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void VSTSynth3AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     synth.setCurrentPlaybackSampleRate(sampleRate);
-    for (int i = 0; i < synth.getNumVoices(); i++)
+
+    // Clear existing voices (if any) and add new ones
+    synth.clearVoices();
+    int numVoices = 8;  // Adjust number based on the maximum polyphony required
+    for (int i = 0; i < numVoices; ++i)
+    {
+        synth.addVoice(new SynthVoice());
+    }
+
+    for (int i = 0; i < synth.getNumVoices(); ++i)
     {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
         {
@@ -109,6 +118,7 @@ void VSTSynth3AudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     }
     filter.prepareToPlay(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
 }
+
 
 void VSTSynth3AudioProcessor::releaseResources()
 {
