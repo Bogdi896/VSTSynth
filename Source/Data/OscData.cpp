@@ -44,10 +44,12 @@ void OscData::setWaveType(const int choice)
             });
         break;
     case 4:
-        // Pulse Wave (SQ4 TEST)
+        // Experimental 1
         initialise([](float x) {
-            float phase = std::fmod(x, juce::MathConstants<float>::twoPi) / juce::MathConstants<float>::twoPi;
-            return phase < 0.25f ? 1.0f : -1.0f;
+            float z = 1;
+            float positiveX = (x / juce::MathConstants<float>::twoPi) + 1;
+            float output = std::sin(juce::MathConstants<float>::pi * z * z * 32 * std::log(positiveX));
+            return output / 10; // scale down to avoid clipping
             });
         break;
 
@@ -60,7 +62,7 @@ void OscData::setWaveType(const int choice)
 
 void OscData::setWaveFrequency(const int midiNoteNumber)
 {
-    setFrequency(juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber) + fmMod);
+    setFrequency(juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber) + fmMod, true);
     lastMidiNote = midiNoteNumber;
 }
 
@@ -73,6 +75,7 @@ void OscData::getNextAudioBlock(juce::dsp::AudioBlock<float>& block)
             fmMod = fmOsc.processSample(block.getSample(ch, s)) * fmDepth;
         }
     }
+    updateFrequency();
     process(juce::dsp::ProcessContextReplacing<float>(block));
 }
 
@@ -102,3 +105,20 @@ void OscData::setFmWaveType(const int choice)
         break;
     }
 }
+
+void OscData::setPitchBend(float pitchBendValue)
+{
+    // Assuming pitchBendValue is already in semitones (e.g., -2 to 2)
+    currentPitchBend = pitchBendValue;
+    updateFrequency();  // Make sure this method recalculates the frequency
+}
+
+
+void OscData::updateFrequency()
+{
+    float baseFrequency = juce::MidiMessage::getMidiNoteInHertz(lastMidiNote);
+    float frequencyWithBend = baseFrequency * std::pow(2.0f, currentPitchBend / 12.0f);
+    setFrequency(frequencyWithBend+fmMod, true);
+}
+
+

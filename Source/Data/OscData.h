@@ -21,10 +21,13 @@ public:
     void getNextAudioBlock(juce::dsp::AudioBlock<float>& block);
     void setFmParams(const float depth, const float freq);
     void setFmWaveType(const int choice);
+    void setPitchBend(float pitchBendValue);
+    void updateFrequency();
 
 private:
     juce::dsp::Oscillator<float> fmOsc{ [](float x) {return std::sin(x); } };
     float fmMod{ 0.0f };
     float fmDepth{ 0.0f };
     int lastMidiNote{ 0 };
+    float currentPitchBend{ 0.0f }; 
 };

@@ -12,9 +12,9 @@
 #include "OscComponent.h"
 
 //==============================================================================
-OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::String waveSelectorId, juce::String fmFreqId, juce::String fmDepthId, juce::String fmWaveSelectorId)
+OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::String waveSelectorId, juce::String fmFreqId, juce::String fmDepthId, juce::String fmWaveSelectorId, juce::String pitchWheelId)
 {
-    juce::StringArray choices{ "Sine", "Saw", "Square", "Triangle", "Pulse (SQ4 TEST)"};
+    juce::StringArray choices{ "Sine", "Saw", "Square", "Triangle", "Experimental 1"};
     oscWaveSelector.addItemList(choices, 1);
     addAndMakeVisible(oscWaveSelector);
 
@@ -38,6 +38,7 @@ OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::Stri
 
     setSliderWithLabel(fmFreqSlider, fmFreqLabel, fmFreqAttachment, apvts, fmFreqId);
     setSliderWithLabel(fmDepthSlider, fmDepthLabel, fmDepthAttachment, apvts, fmDepthId);
+    setSliderWithLabel(pitchSlider, pitchSliderLabel, pitchSliderAttachment, apvts, pitchWheelId);
 
 }
 
@@ -54,7 +55,7 @@ void OscComponent::paint (juce::Graphics& g)
     g.setColour(juce::Colours::white);
     g.setFont(20.0f);
     g.drawText("Oscillator", labelSpace.withX(5), juce::Justification::left);
-    g.drawRoundedRectangle(bounds.toFloat(), 5.0f, 2.0f);
+    g.drawRoundedRectangle(bounds.toFloat(), 10.0f, 2.0f);
 }
 
 void OscComponent::resized()
@@ -77,8 +78,11 @@ void OscComponent::resized()
     fmDepthSlider.setBounds(fmFreqSlider.getRight(), startY, sliderWidth, sliderHeight);
     fmDepthLabel.setBounds(fmDepthSlider.getX(), fmDepthSlider.getY() - labelYOffset, fmDepthSlider.getWidth(), labelHeight);
 
-    DBG("oscWaveSelector bounds: " + oscWaveSelector.getBounds().toString());
-    DBG("fmOscWaveSelector bounds: " + fmOscWaveSelector.getBounds().toString());
+    pitchSlider.setBounds(fmDepthSlider.getRight(), startY, sliderWidth, sliderHeight);
+    pitchSliderLabel.setBounds(pitchSlider.getX(), pitchSlider.getY() - labelYOffset, pitchSlider.getWidth(), labelHeight);
+
+    //DBG("oscWaveSelector bounds: " + oscWaveSelector.getBounds().toString());
+    //DBG("fmOscWaveSelector bounds: " + fmOscWaveSelector.getBounds().toString());
 
 }
 

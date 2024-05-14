@@ -161,6 +161,7 @@ void VSTSynth3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
+    auto& pitchWheelValue = *apvts.getRawParameterValue("PITCH");
 
     for (int i = 0; i < synth.getNumVoices(); ++i)
     {
@@ -169,6 +170,8 @@ void VSTSynth3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             // Osc controls
             // ADSR
             // LFO
+
+            voice->getOscillator().setPitchBend(pitchWheelValue);
 
             auto& attack = *apvts.getRawParameterValue("ATTACK");
             auto& decay = *apvts.getRawParameterValue("DECAY");
@@ -190,6 +193,13 @@ void VSTSynth3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
 
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
+
+    /*for (int channel = 0; channel < totalNumOutputChannels; ++channel) {
+        float* channelData = buffer.getWritePointer(channel);
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample) {
+            channelData[sample] = softClip(channelData[sample]);
+        }
+    }*/  // Not sure if this works
 
     auto& filterType = *apvts.getRawParameterValue("FILTERTYPE");
     auto& cutoff = *apvts.getRawParameterValue("FILTERCUTOFF");
@@ -237,21 +247,33 @@ juce::AudioProcessorValueTreeState::ParameterLayout VSTSynth3AudioProcessor::cre
 
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     // OSC
-    params.push_back(std::make_unique<juce::AudioParameterChoice>("OSC", "Oscillator", juce::StringArray{ "Sine", "Saw", "Square", "Triangle", "Pulse(SQ4 test)" }, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("OSC", "Oscillator", juce::StringArray{ "Sine", "Saw", "Square", "Triangle", "Experimental 1" }, 0));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PITCH", "Pitch Wheel Value", -12.0f, 12.0f, 0.0f));
+
+    // Upper and Lower Limits for Pitch Wheel
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PITCHUPP", "Pitch Wheel Upper Limit", 1.0f, 12.0f, 2.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("PITCHLOW", "Pitch Wheel Lower Limit", -12.0f, -1.0f, -2.0f));
 
     // FM
     params.push_back(std::make_unique<juce::AudioParameterFloat>("OSC1FMFREQ", "FM Frequency", juce::NormalisableRange<float> {0.0f, 1000.0f, 0.01f, 0.3f}, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("OSC1FMDEPTH", "FM Depth", juce::NormalisableRange<float> {0.0f, 1000.0f, 0.01f, 0.3f}, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterChoice>("FMOSCTYPE", "FM Oscillator Type", juce::StringArray{ "Sine", "Saw", "Square" }, 0));
 
+
     // ADSR
 
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("ATTACK", "Attack", juce::NormalisableRange<float> {0.1f, 3.0f, 0.1f}, 0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DECAY", "Decay", juce::NormalisableRange<float> {0.1f, 1.0f, 0.1f}, 0.1f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("SUSTAIN", "Sustain", juce::NormalisableRange<float> {0.0f, 1.0f, 0.1f}, 1.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("RELEASE", "Release", juce::NormalisableRange<float> {0.0f, 3.0f, 0.1f}, 0.4f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("ATTACK", "Attack", juce::NormalisableRange<float>(0.01f, 3.0f, 0.01f, 0.4f),
+        0.1f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("DECAY", "Decay", juce::NormalisableRange<float>(0.01f, 1.0f, 0.01f, 0.4f),
+        0.1f));
 
-    params.push_back(std::make_unique <juce::AudioParameterChoice>("OSC1WAVETYPE", "Osc 1 Wave Type", juce::StringArray{ "Sine", "Saw", "Square", "Triangle", "Pulse(SQ4 test)" }, 0));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("SUSTAIN", "Sustain", juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        1.0f));
+
+    params.push_back(std::make_unique<juce::AudioParameterFloat>("RELEASE", "Release", juce::NormalisableRange<float>(0.01f, 3.0f, 0.01f, 0.4f),
+        0.4f));
+
+    params.push_back(std::make_unique <juce::AudioParameterChoice>("OSC1WAVETYPE", "Osc 1 Wave Type", juce::StringArray{ "Sine", "Saw", "Square", "Triangle", "Experimental 1" }, 0));
 
     // Filter 
 
@@ -261,4 +283,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout VSTSynth3AudioProcessor::cre
 
     return { params.begin(), params.end() };
 
+}
+
+float VSTSynth3AudioProcessor::softClip(float input) { 
+    // Threshold at which clipping starts
+    const float threshold = 0.8f; // Adjust threshold according to your need
+    const float maxLimit = 1.0f;  // Maximum output value
+
+    if (input > threshold) {
+        return maxLimit - (maxLimit - threshold) * exp(-(input - threshold));
+    }
+    else if (input < -threshold) {
+        return -maxLimit + (maxLimit - threshold) * exp((input + threshold));
+    }
+    return input;
 }

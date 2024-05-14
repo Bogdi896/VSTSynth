@@ -13,6 +13,7 @@
 #include "UI/AdsrComponent.h"
 #include "UI/OscComponent.h"
 #include "UI/FilterComponent.h"
+#include "UI/MidiKeyboardComponent.h"
 
 //==============================================================================
 /**
@@ -33,6 +34,7 @@ private:
     OscComponent osc;
     AdsrComponent adsr;
     FilterComponent filter;
+    MidiKeyboardComponent keyboard;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VSTSynth3AudioProcessorEditor)
 };
