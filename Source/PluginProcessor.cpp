@@ -117,6 +117,8 @@ void VSTSynth3AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlo
         }
     }
     filter.prepareToPlay(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
+
+    midiMessageCollector.reset(sampleRate);
 }
 
 
@@ -160,6 +162,8 @@ void VSTSynth3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+
+    midiMessageCollector.removeNextBlockOfMessages(midiMessages, buffer.getNumSamples());
 
     auto& pitchWheelValue = *apvts.getRawParameterValue("PITCH");
 

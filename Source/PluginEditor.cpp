@@ -15,7 +15,7 @@ VSTSynth3AudioProcessorEditor::VSTSynth3AudioProcessorEditor (VSTSynth3AudioProc
     osc (audioProcessor.apvts, "OSC1WAVETYPE", "OSC1FMFREQ", "OSC1FMDEPTH", "FMOSCTYPE", "PITCH"),
     adsr("Amp Envelope", audioProcessor.apvts, "ATTACK", "DECAY", "SUSTAIN", "RELEASE"),
     filter (audioProcessor.apvts, "FILTERTYPE", "FILTERCUTOFF", "FILTERRES"),
-    keyboard (p.keyboardState)
+    keyboard(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -27,18 +27,22 @@ VSTSynth3AudioProcessorEditor::VSTSynth3AudioProcessorEditor (VSTSynth3AudioProc
     addAndMakeVisible(filter);
     addAndMakeVisible(keyboard);
     
+    keyboardState.addListener(this);
+
+    startTimer(200);
 }
 
 VSTSynth3AudioProcessorEditor::~VSTSynth3AudioProcessorEditor()
 {
+    keyboardState.removeListener(this);
 }
 
 //==============================================================================
-void VSTSynth3AudioProcessorEditor::paint (juce::Graphics& g)
+void VSTSynth3AudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colours::black);
-
+    g.fillAll(juce::Colour(0xff4d5d6b)); // Light cream background
 }
+
 
 void VSTSynth3AudioProcessorEditor::resized()
 {
@@ -53,3 +57,24 @@ void VSTSynth3AudioProcessorEditor::resized()
     keyboard.setBounds(10, 450, getWidth() - 20, 90);
 }
 
+void VSTSynth3AudioProcessorEditor::handleNoteOn(juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float velocity)
+{
+    auto m = juce::MidiMessage::noteOn(midiChannel, midiNoteNumber, velocity);
+    m.setTimeStamp(juce::Time::getMillisecondCounterHiRes() * 0.001);
+    audioProcessor.getMidiMessageCollector().addMessageToQueue(m);
+}
+
+void VSTSynth3AudioProcessorEditor::handleNoteOff(juce::MidiKeyboardState*, int midiChannel, int midiNoteNumber, float /*velocity*/)
+{
+    auto m = juce::MidiMessage::noteOff(midiChannel, midiNoteNumber);
+    m.setTimeStamp(juce::Time::getMillisecondCounterHiRes() * 0.001);
+    audioProcessor.getMidiMessageCollector().addMessageToQueue(m);
+}
+
+void VSTSynth3AudioProcessorEditor::timerCallback()
+{
+    if (!keyboard.hasKeyboardFocus(true))
+    {
+        keyboard.grabKeyboardFocus();
+    }
+}

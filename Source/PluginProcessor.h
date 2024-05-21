@@ -56,16 +56,18 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::MidiMessageCollector& getMidiMessageCollector() { return midiMessageCollector; }
+
     float softClip(float input);
 
     juce::AudioProcessorValueTreeState apvts;
-    juce::MidiKeyboardState keyboardState;
 
 
 private:
     juce::Synthesiser synth;
     FilterData filter;
     juce::AudioProcessorValueTreeState::ParameterLayout createParams();
+    juce::MidiMessageCollector midiMessageCollector;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VSTSynth3AudioProcessor)

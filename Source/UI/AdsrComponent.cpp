@@ -21,12 +21,18 @@ void AdsrComponent::paint(juce::Graphics& g)
     auto bounds = getLocalBounds().reduced(5);
     auto labelSpace = bounds.removeFromTop(25.0f);
 
-    g.fillAll(juce::Colours::black);
-    g.setColour(juce::Colours::white);
+    g.fillAll(juce::Colour(0xff4d5d6b)); // Darker, muted blue background
+    g.setColour(juce::Colours::white); // White text color
     g.setFont(20.0f);
-    g.drawText(componentName, labelSpace.withX(5), juce::Justification::left);
-    g.drawRoundedRectangle(bounds.toFloat(), 5.0f, 2.0f);
+    g.drawText(componentName, labelSpace.withX(5), juce::Justification::centred);
+
+    g.setColour(juce::Colour(0xff2f3b45)); // Darker gray for rounded rectangle fill
+    g.fillRoundedRectangle(bounds.toFloat(), 10.0f); // Increase corner radius
+
+    g.setColour(juce::Colour(0xff1e242b)); // Even darker gray for rounded rectangle border
+    g.drawRoundedRectangle(bounds.toFloat(), 10.0f, 2.0f);
 }
+
 
 void AdsrComponent::resized()
 {
