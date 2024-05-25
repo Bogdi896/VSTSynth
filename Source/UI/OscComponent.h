@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../Data/OscData.h"
 
 //==============================================================================
 /*
@@ -18,13 +19,16 @@
 class OscComponent  : public juce::Component
 {
 public:
-    OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::String waveSelectorId, juce::String fmFreqId, juce::String fmDepthId, juce::String fmOscWaveSelectorId, juce::String pitchWheelId);
+    OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::String waveSelectorId, juce::String fmFreqId, juce::String fmDepthId, juce::String fmWaveSelectorId, juce::String pitchWheelId, OscData& oscData);
     ~OscComponent() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
+
 private:
+
+    void waveformTypeChanged();
 
     juce::ComboBox oscWaveSelector;
     juce::ComboBox fmOscWaveSelector;
@@ -46,8 +50,11 @@ private:
     juce::Label fmDepthLabel{ "FM Depth", "FM Depth" };
     juce::Label pitchSliderLabel{ "Pitch Wheel", "Pitch Wheel" };
 
-    void setSliderWithLabel(juce::Slider& slider, juce::Label& label, std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment, juce::AudioProcessorValueTreeState& apvts, juce::String paramId);
+    OscData& oscillator;
 
+    void setSliderWithLabel(juce::Slider& slider, juce::Label& label, std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>& attachment, juce::AudioProcessorValueTreeState& apvts, juce::String paramId);
+    void drawWaveform(juce::Graphics& g, juce::Rectangle<int> bounds);
+    float getSampleAtPosition(float position, int waveType);
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OscComponent)

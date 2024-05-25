@@ -212,6 +212,15 @@ void VSTSynth3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     filter.updateParameters(filterType, cutoff, resonance);
 
     filter.process(buffer);
+
+    for (int channel = 0; channel < totalNumOutputChannels; ++channel)
+    {
+        auto* channelData = buffer.getWritePointer(channel);
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            channelData[sample] = softClip(channelData[sample]);
+        }
+    }
 }
 
 //==============================================================================
@@ -251,7 +260,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout VSTSynth3AudioProcessor::cre
 
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     // OSC
-    params.push_back(std::make_unique<juce::AudioParameterChoice>("OSC", "Oscillator", juce::StringArray{ "Sine", "Saw", "Square", "Triangle", "Experimental 1" }, 0));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>("OSC", "Oscillator", juce::StringArray{ "Sine", "Saw", "Square", "Experimental 1" }, 0));
     params.push_back(std::make_unique<juce::AudioParameterFloat>("PITCH", "Pitch Wheel Value", -12.0f, 12.0f, 0.0f));
 
     // Upper and Lower Limits for Pitch Wheel
@@ -277,7 +286,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout VSTSynth3AudioProcessor::cre
     params.push_back(std::make_unique<juce::AudioParameterFloat>("RELEASE", "Release", juce::NormalisableRange<float>(0.01f, 3.0f, 0.01f, 0.4f),
         0.4f));
 
-    params.push_back(std::make_unique <juce::AudioParameterChoice>("OSC1WAVETYPE", "Osc 1 Wave Type", juce::StringArray{ "Sine", "Saw", "Square", "Triangle", "Experimental 1" }, 0));
+    params.push_back(std::make_unique <juce::AudioParameterChoice>("OSC1WAVETYPE", "Osc 1 Wave Type", juce::StringArray{ "Sine", "Saw", "Square", "Experimental 1" }, 0));
 
     // Filter 
 
@@ -301,4 +310,18 @@ float VSTSynth3AudioProcessor::softClip(float input) {
         return -maxLimit + (maxLimit - threshold) * exp((input + threshold));
     }
     return input;
+}
+
+float softClip(float x)
+{
+    const float threshold1 = 0.5f;
+    const float threshold2 = -0.5f;
+    const float maxLevel = 1.0f;
+
+    if (x > threshold1)
+        return threshold1 + (x - threshold1) / (1.0f + (x - threshold1) * (x - threshold1));
+    else if (x < threshold2)
+        return threshold2 + (x - threshold2) / (1.0f + (x - threshold2) * (x - threshold2));
+    else
+        return x - (x * x * x) / 3.0f;
 }

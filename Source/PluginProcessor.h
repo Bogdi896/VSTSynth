@@ -58,6 +58,18 @@ public:
 
     juce::MidiMessageCollector& getMidiMessageCollector() { return midiMessageCollector; }
 
+    SynthVoice* getSynthVoice()
+    {
+        for (int i = 0; i < synth.getNumVoices(); ++i)
+        {
+            if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i)))
+            {
+                return voice;
+            }
+        }
+        return nullptr;
+    }
+
     float softClip(float input);
 
     juce::AudioProcessorValueTreeState apvts;

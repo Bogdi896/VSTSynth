@@ -12,7 +12,7 @@
 //==============================================================================
 VSTSynth3AudioProcessorEditor::VSTSynth3AudioProcessorEditor (VSTSynth3AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p),
-    osc (audioProcessor.apvts, "OSC1WAVETYPE", "OSC1FMFREQ", "OSC1FMDEPTH", "FMOSCTYPE", "PITCH"),
+    osc (audioProcessor.apvts, "OSC1WAVETYPE", "OSC1FMFREQ", "OSC1FMDEPTH", "FMOSCTYPE", "PITCH", audioProcessor.getSynthVoice()->getOscillator()),
     adsr("Amp Envelope", audioProcessor.apvts, "ATTACK", "DECAY", "SUSTAIN", "RELEASE"),
     filter (audioProcessor.apvts, "FILTERTYPE", "FILTERCUTOFF", "FILTERRES"),
     keyboard(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)

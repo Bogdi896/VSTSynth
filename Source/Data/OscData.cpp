@@ -10,6 +10,7 @@
 
 #include "OscData.h"
 
+
 void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec)
 {
     fmOsc.prepare(spec);
@@ -18,46 +19,42 @@ void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec)
 
 void OscData::setWaveType(const int choice)
 {
-    // return std::sin (x); // Sine Wave
-    // return x / juce::MathConstants<float>::pi; // Saw Wave
-    // return x < 0.0f ? -1.0f : 1.0f; // Square Wave
+    waveType = choice;
 
     switch (choice)
     {
     case 0:
         // Sine 
-        initialise([](float x) {return std::sin(x); });
+        currentWaveFunction = [](float x) { return std::sin(x); };
         break;
     case 1:
         // Saw
-        initialise([](float x) {return x / juce::MathConstants<float>::pi; });
+        currentWaveFunction = [](float x) { return x / juce::MathConstants<float>::pi; };
         break;
     case 2:
         // Square Wave
-        initialise([](float x) {return x < 0.0f ? -1.0f : 1.0f; });
+        currentWaveFunction = [](float x) { return x < 0.0f ? -1.0f : 1.0f; };
         break;
     case 3:
-        // Triangle Wave
-        initialise([](float x) {
-            float phase = std::fmod(x, juce::MathConstants<float>::twoPi) / juce::MathConstants<float>::twoPi;
-            return 2.0f * std::abs(2.0f * phase - 1.0f) - 1.0f;
-            });
-        break;
-    case 4:
         // Experimental 1
-        initialise([](float x) {
-            float z = 1;
+        currentWaveFunction = [](float x) {
             float positiveX = (x / juce::MathConstants<float>::twoPi) + 1;
-            float output = std::sin(juce::MathConstants<float>::pi * z * z * 32 * std::log(positiveX));
-            return output / 10; // scale down to avoid clipping
-            });
+            return std::sin(juce::MathConstants<float>::pi * 32 * std::log(positiveX))/5;
+            };
         break;
-
 
     default:
         jassertfalse;
         break;
     }
+
+    // Call initialise with the current wave function
+    initialise(currentWaveFunction);
+}
+
+int OscData::getWaveType() const
+{
+    return waveType;
 }
 
 void OscData::setWaveFrequency(const int midiNoteNumber)
@@ -121,4 +118,8 @@ void OscData::updateFrequency()
     setFrequency(frequencyWithBend+fmMod, true);
 }
 
-
+float OscData::getSampleAtPosition(float position)
+{
+    //float normalizedPosition = position * juce::MathConstants<float>::twoPi;
+    return currentWaveFunction(position);
+}

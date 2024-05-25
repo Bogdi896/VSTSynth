@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <functional>
 
 class OscData : public juce::dsp::Oscillator<float>
 {
@@ -23,11 +24,15 @@ public:
     void setFmWaveType(const int choice);
     void setPitchBend(float pitchBendValue);
     void updateFrequency();
+    int getWaveType() const;
+    float getSampleAtPosition(float position);
 
 private:
+    std::function<float(float)> currentWaveFunction;
     juce::dsp::Oscillator<float> fmOsc{ [](float x) {return std::sin(x); } };
     float fmMod{ 0.0f };
     float fmDepth{ 0.0f };
     int lastMidiNote{ 0 };
     float currentPitchBend{ 0.0f }; 
+    int waveType{ 0 };
 };
