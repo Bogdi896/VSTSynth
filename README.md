@@ -1,0 +1,1 @@
+This project involved the development of a fully functional synthesizer using JUCE, a widely used framework for audio applications. The synthesizer features various oscillators, filters, and FM synthesis, allowing users to create a wide range of sounds.
